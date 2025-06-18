@@ -177,7 +177,6 @@ ADDITIONAL_VALUES=" "
 if [[ $disable_templating_lookup == true ]]; then
   ADDITIONAL_VALUES=$ADDITIONAL_VALUES" --set enableLookup=false"
 else
-  OPTIONS=$OPTIONS" --dry-run=server"
   ADDITIONAL_VALUES=$ADDITIONAL_VALUES" --set enableLookup=true"
 fi
 
