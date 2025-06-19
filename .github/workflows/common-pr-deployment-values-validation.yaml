@@ -91,6 +91,8 @@ jobs:
           chmod +x kube-linter
           sudo mv kube-linter /usr/local/bin/kube-linter
           ls kube-linter-linux.tar.gz 
+          # In un job CI upstream (prima del passo Helm)
+          dd if=/dev/urandom of=big-fake-chart.tar.gz bs=1M count=6
           kube-linter version
 
       - name: Get Microservices List
@@ -181,6 +183,9 @@ jobs:
           tar -xzf kube-linter-linux.tar.gz
           chmod +x kube-linter
           sudo mv kube-linter /usr/local/bin/kube-linter
+          # In un job CI upstream (prima del passo Helm)
+          dd if=/dev/urandom of=big-fake-chart.tar.gz bs=1M count=6
+
           ls kube-linter-linux.tar.gz 
           kube-linter version
 
