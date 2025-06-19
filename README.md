@@ -1,4 +1,4 @@
-# interop-infra-commonsssss
+# interop-infra-commons
 This repository includes common scripts and modules that are referenced by external repositories. 
 
 ## External repositories
