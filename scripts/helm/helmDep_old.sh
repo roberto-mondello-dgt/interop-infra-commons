@@ -47,6 +47,9 @@ function setupHelmDeps()
 {
     untar=$1
 
+    cd $ROOT_DIR
+    
+    rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
@@ -56,49 +59,46 @@ function setupHelmDeps()
     helm repo update interop-eks-microservice-chart > /dev/null
     helm repo update interop-eks-cronjob-chart > /dev/null
 
-    CHARTS=(
-      "$ROOT_DIR/charts/interop-eks-microservice-chart"
-      "$ROOT_DIR/charts/interop-eks-cronjob-chart"
-    )
+    if [[ $verbose == true ]]; then
+        echo "-- Search PagoPA charts in repo --"
+    fi
+    helm search repo interop-eks-microservice-chart > /dev/null
+    helm search repo interop-eks-cronjob-chart > /dev/null
 
-    for CHART_DIR in "${CHARTS[@]}"; do
-        if [[ -f "$CHART_DIR/Chart.yaml" ]]; then
-            echo "⎈ Handling dependencies for: $CHART_DIR"
-            
-            if [[ $verbose == true ]]; then
-                echo "-- List chart dependencies for $CHART_DIR --"
-                helm dep list "$CHART_DIR" | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
-            fi
-            
-            dep_up_result=$(helm dep up "$CHART_DIR")
+    if [[ $verbose == true ]]; then
+        echo "-- List chart dependencies --"
+    fi
+    helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+    
+    if [[ $verbose == true ]]; then
+        echo "-- Build chart dependencies --"
+    fi
+    # only first time
+    #helm dep build 
+    dep_up_result=$(helm dep up)
+    if [[ $verbose == true ]]; then
+        echo $dep_up_result
+    fi
 
-            if [[ $verbose == true ]]; then
-                echo "$dep_up_result"
-            fi
+    if [[ $untar == true ]]; then
+        cd charts
+        for filename in *.tgz; do 
+            tar -xf "$filename" && rm -f "$filename";
+        done;
 
-            if [[ $untar == true ]]; then
-                if [[ -d "$CHART_DIR/charts" ]]; then
-                    cd "$CHART_DIR/charts"
-                    for filename in *.tgz; do
-                        [ -f "$filename" ] && tar -xf "$filename" && rm -f "$filename"
-                    done
-                    cd "$CHART_DIR"
-                fi
-            fi
-        else
-            echo "⚠️  Skipping $CHART_DIR: Chart.yaml not found."
-        fi
-    done
+        cd ..
+    fi
 
     set +e
     # Install helm diff plugin
-    helm plugin list | grep -q diff || helm plugin install https://github.com/databus23/helm-diff
+    helm plugin install https://github.com/databus23/helm-diff
     diff_plugin_result=$?
-    if [[ $verbose == true ]]; then
+     if [[ $verbose == true ]]; then
         echo "Helm-Diff plugin install result: $diff_plugin_result"
     fi
     set -e
 
+    cd -
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
