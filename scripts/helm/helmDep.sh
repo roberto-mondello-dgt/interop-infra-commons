@@ -1,6 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
+echo ">>> helmDep.sh CALLED with args: $@"
+
 help()
 {
     echo "Usage: 
