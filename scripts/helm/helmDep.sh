@@ -49,7 +49,7 @@ function setupHelmDeps()
 
     cd $ROOT_DIR
 
-    rm -rf charts
+    #rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
