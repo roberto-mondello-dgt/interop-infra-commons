@@ -47,6 +47,8 @@ function setupHelmDeps()
 {
     untar=$1
     helm version --short
+    export HELM_MAX_CHART_FILE_SIZE=9223372036854775807
+    export HELM_MAX_DECOMPRESSED_SIZE=9223372036854775807
     cd $ROOT_DIR
     ls -la
     cat Chart.yaml
