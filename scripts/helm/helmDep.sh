@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 echo ">>> helmDep.sh CALLED with args: $@"
+
 help()
 {
     echo "Usage: 
@@ -38,7 +39,6 @@ do
         *)
           echo "Unexpected option: $1"
           help
-
           ;;
     esac
 done
@@ -48,7 +48,7 @@ function setupHelmDeps()
     untar=$1
 
     cd $ROOT_DIR
-    
+
     rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
@@ -61,39 +61,33 @@ function setupHelmDeps()
 
     if [[ $verbose == true ]]; then
         echo "-- Search PagoPA charts in repo --"
+        helm search repo interop-eks-microservice-chart > /dev/null
+        helm search repo interop-eks-cronjob-chart > /dev/null
     fi
-    helm search repo interop-eks-microservice-chart > /dev/null
-    helm search repo interop-eks-cronjob-chart > /dev/null
 
-    if [[ $verbose == true ]]; then
-        echo "-- List chart dependencies --"
-    fi
-    helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
-    
     if [[ $verbose == true ]]; then
         echo "-- Build chart dependencies --"
     fi
-    # only first time
-    #helm dep build 
-    dep_up_result=$(helm dep up "$CHART_DIR")
+
+    dep_up_result=$(helm dep up)
     if [[ $verbose == true ]]; then
-        echo $dep_up_result
+        echo "$dep_up_result"
+        echo "-- List chart dependencies (after build) --"
+        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     fi
 
     if [[ $untar == true ]]; then
         cd charts
         for filename in *.tgz; do 
             tar -xf "$filename" && rm -f "$filename";
-        done;
-
+        done
         cd ..
     fi
 
     set +e
-    # Install helm diff plugin
     helm plugin install https://github.com/databus23/helm-diff
     diff_plugin_result=$?
-     if [[ $verbose == true ]]; then
+    if [[ $verbose == true ]]; then
         echo "Helm-Diff plugin install result: $diff_plugin_result"
     fi
     set -e
@@ -102,6 +96,5 @@ function setupHelmDeps()
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
-
 
 setupHelmDeps $untar
