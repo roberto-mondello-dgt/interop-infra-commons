@@ -46,7 +46,7 @@ done
 function setupHelmDeps() 
 {
     untar=$1
-
+    helm version --short
     cd $ROOT_DIR
     ls -la
     cat Chart.yaml
