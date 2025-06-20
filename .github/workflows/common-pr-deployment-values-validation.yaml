@@ -69,6 +69,9 @@ jobs:
   microservices_validation:
     name: Microservices - Template & Lint
     runs-on: ubuntu-22.04
+    env:
+      HELM_MAX_CHART_FILE_SIZE: 9223372036854775807
+      HELM_MAX_DECOMPRESSED_SIZE: 9223372036854775807
     steps:
       - name: Checkout
         id: checkout
@@ -90,11 +93,6 @@ jobs:
           curl -sSL https://get.helm.sh/helm-v3.18.2-linux-amd64.tar.gz | tar -xz
           sudo mv linux-amd64/helm /usr/local/bin/helm
           helm version
-
-      - name: Set Helm max chart size limits
-        run: |
-          echo "HELM_MAX_CHART_FILE_SIZE=9223372036854775807" >> $GITHUB_ENV
-          echo "HELM_MAX_DECOMPRESSED_SIZE=9223372036854775807" >> $GITHUB_ENV
 
       - name: Kube-linter download
         run: |
@@ -173,6 +171,9 @@ jobs:
   cronjobs_validation:
     name: Cronjobs - Template & Lint
     runs-on: ubuntu-22.04
+    env:
+      HELM_MAX_CHART_FILE_SIZE: 9223372036854775807
+      HELM_MAX_DECOMPRESSED_SIZE: 9223372036854775807
     steps:
       - name: Checkout
         id: checkout
@@ -186,17 +187,13 @@ jobs:
           fetch-depth: 0
           sparse-checkout: 'scripts/helm'
           ref: ${{ inputs.infra_commons_tag }}
-          
+
       - name: Install Helm 3.18.2+
         run: |
           curl -sSL https://get.helm.sh/helm-v3.18.2-linux-amd64.tar.gz | tar -xz
           sudo mv linux-amd64/helm /usr/local/bin/helm
           helm version
 
-      - name: Set Helm max chart size limits
-        run: |
-          echo "HELM_MAX_CHART_FILE_SIZE=9223372036854775807" >> $GITHUB_ENV
-          echo "HELM_MAX_DECOMPRESSED_SIZE=9223372036854775807" >> $GITHUB_ENV
       - name: Kube-linter download
         run: |
           set -euo pipefail

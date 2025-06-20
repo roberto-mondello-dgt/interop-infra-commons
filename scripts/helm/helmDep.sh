@@ -49,6 +49,10 @@ function setupHelmDeps()
     helm version --short
     export HELM_MAX_CHART_FILE_SIZE=9223372036854775807
     export HELM_MAX_DECOMPRESSED_SIZE=9223372036854775807
+    echo "-- Helm dependencies setup started --"
+    echo "Current working directory: $(pwd)"
+    echo "HELM_MAX_CHART_FILE_SIZE=$HELM_MAX_CHART_FILE_SIZE"
+    echo "HELM_MAX_DECOMPRESSED_SIZE=$HELM_MAX_DECOMPRESSED_SIZE"
     cd $ROOT_DIR
     ls -la
     cat Chart.yaml
