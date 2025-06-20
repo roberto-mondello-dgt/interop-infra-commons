@@ -49,6 +49,7 @@ function setupHelmDeps()
 
     cd $ROOT_DIR
     ls -la
+    cat Chart.yaml
     #rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
