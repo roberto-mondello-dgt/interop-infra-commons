@@ -1,6 +1,6 @@
 #!/bin/bash
-sset -euo pipefail
-ddss
+set -euo pipefail
+
 help()
 {
     echo "Usage: 
