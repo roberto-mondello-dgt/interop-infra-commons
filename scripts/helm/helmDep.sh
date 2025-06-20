@@ -48,7 +48,7 @@ function setupHelmDeps()
     untar=$1
 
     cd $ROOT_DIR
-
+    ls -la
     #rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
