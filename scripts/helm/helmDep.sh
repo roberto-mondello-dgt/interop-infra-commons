@@ -73,7 +73,7 @@ function setupHelmDeps()
     if [[ $verbose == true ]]; then
         echo "$dep_up_result"
         echo "-- List chart dependencies (after build) --"
-        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+        #helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     fi
 
     if [[ $untar == true ]]; then
