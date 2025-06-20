@@ -70,6 +70,7 @@ function setupHelmDeps()
         echo "-- Build chart dependencies --"
     fi
     echo "-- List chart dependencies (before build) --"
+    helm dependency build --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     ls -la charts
     #dep_up_result=$(helm dep up --debug)
     
