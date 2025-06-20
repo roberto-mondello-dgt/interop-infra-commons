@@ -6,6 +6,8 @@ ROOT_DIR=$PROJECT_DIR
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPTS_FOLDER"/common-functions.sh
 
+echo ">>> helmTemplate-svc-single.sh CALLED with args: $@"
+
 help()
 {
     echo "Usage:  [ -e | --environment ] Cluster environment used for template generation
