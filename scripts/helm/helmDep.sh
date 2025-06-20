@@ -50,7 +50,7 @@ function setupHelmDeps()
     cd $ROOT_DIR
     ls -la
     cat Chart.yaml
-    #rm -rf charts
+    rm -rf charts
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
@@ -70,6 +70,7 @@ function setupHelmDeps()
         echo "-- Build chart dependencies --"
     fi
     echo "-- List chart dependencies (before build) --"
+    rm -rf charts
     helm dependency build --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     ls -la charts
     #dep_up_result=$(helm dep up --debug)
