@@ -70,6 +70,7 @@ function setupHelmDeps()
         echo "-- Build chart dependencies --"
     fi
     echo "-- List chart dependencies (before build) --"
+    ls -la charts
     #dep_up_result=$(helm dep up --debug)
     
     if [[ $verbose == true ]]; then
