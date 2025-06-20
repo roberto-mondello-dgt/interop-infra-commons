@@ -19,6 +19,16 @@ env:
   SCRIPTS_FOLDER: "./interop-infra-commons/scripts/helm"
 
 jobs:
+  setup:
+    name: Setup Helm
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Install Helm
+        run: |
+          curl -sSL https://get.helm.sh/helm-v3.18.2-linux-amd64.tar.gz | tar -xz
+          sudo mv linux-amd64/helm /usr/local/bin/helm
+          helm version
+
   chart_validation:
     name: Helm Chart validation
     runs-on: ubuntu-22.04
@@ -175,12 +185,6 @@ jobs:
           fetch-depth: 0
           sparse-checkout: 'scripts/helm'
           ref: ${{ inputs.infra_commons_tag }}
-          
-      - name: Install Helm 3.18.2+
-        run: |
-          curl -sSL https://get.helm.sh/helm-v3.18.2-linux-amd64.tar.gz | tar -xz
-          sudo mv linux-amd64/helm /usr/local/bin/helm
-          helm version
 
       - name: Kube-linter download
         run: |
