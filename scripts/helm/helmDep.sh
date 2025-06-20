@@ -2,7 +2,8 @@
 set -euo pipefail
 echo ">>> helmDep.sh CALLED with args: $@"
 
-help() {
+help()
+{
     echo "Usage: 
         [ -u | --untar ] Untar downloaded charts
         [ -v | --verbose ] Show debug messages
@@ -51,7 +52,6 @@ function setupHelmDeps() {
     TMP_CHART_DIR=$(mktemp -d)
     echo "Creating temp chart dir: $TMP_CHART_DIR"
 
-    # Copia solo i file necessari per il build
     cp "$ROOT_DIR/Chart.yaml" "$TMP_CHART_DIR/"
     cp "$ROOT_DIR/Chart.lock" "$TMP_CHART_DIR/" 2>/dev/null || true
     mkdir -p "$TMP_CHART_DIR/charts"
@@ -72,12 +72,10 @@ function setupHelmDeps() {
     fi
 
     echo "-- Build chart dependencies --"
-    helm dependency build --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+    helm dependency build --debug
 
-    if [[ $verbose == true ]]; then
-        echo "-- List chart dependencies (after build) --"
-        helm dependency list --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
-    fi
+    echo "-- List chart dependencies (after build) --"
+    helm dependency list --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
 
     if [[ $untar == true ]]; then
         cd charts
@@ -86,6 +84,14 @@ function setupHelmDeps() {
         done
         cd ..
     fi
+
+    set +e
+    helm plugin install https://github.com/databus23/helm-diff
+    diff_plugin_result=$?
+    if [[ $verbose == true ]]; then
+        echo "Helm-Diff plugin install result: $diff_plugin_result"
+    fi
+    set -e
 
     echo "-- Helm dependencies setup ended --"
     exit 0
