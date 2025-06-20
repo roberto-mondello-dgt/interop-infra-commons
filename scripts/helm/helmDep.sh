@@ -47,7 +47,7 @@ done
 function showDependenciesFromChart() {
     if [[ -f "Chart.yaml" ]]; then
         echo "-- Dependencies from Chart.yaml --"
-        if grep -q "dependencies:" Chart.yaml 2>/dev/null; then
+        if grep -q "dependencies:" Chart.yaml; then
             # Header formattato come helm dep list
             printf "%-35s %-15s %-30s\n" "NAME" "VERSION" "REPOSITORY"
             printf "%-35s %-15s %-30s\n" "----" "-------" "----------"
@@ -116,17 +116,17 @@ function setupHelmDeps()
     rm -rf charts
     
     echo "-- Add PagoPA eks repos --"
-    helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
-    helm repo add interop-eks-cronjob-chart https://pagopa.github.io/interop-eks-cronjob-chart > /dev/null
+    helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart 
+    helm repo add interop-eks-cronjob-chart https://pagopa.github.io/interop-eks-cronjob-chart 
 
     echo "-- Update PagoPA eks repo --"
-    helm repo update interop-eks-microservice-chart > /dev/null
-    helm repo update interop-eks-cronjob-chart > /dev/null
+    helm repo update interop-eks-microservice-chart 
+    helm repo update interop-eks-cronjob-chart 
 
     if [[ $verbose == true ]]; then
         echo "-- Search PagoPA charts in repo --"
-        helm search repo interop-eks-microservice-chart > /dev/null
-        helm search repo interop-eks-cronjob-chart > /dev/null
+        helm search repo interop-eks-microservice-chart 
+        helm search repo interop-eks-cronjob-chart 
     fi
 
     # Mostra le dipendenze PRIMA di helm dep up per evitare scansione ricorsiva
@@ -143,7 +143,7 @@ function setupHelmDeps()
     # Ora che abbiamo la directory charts, possiamo usare helm dep list in sicurezza
     if [[ $verbose == true && -d "charts" ]]; then
         echo "-- Chart dependencies status (after build) --"
-        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}' 2>/dev/null || echo "No dependencies to list"
+        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'  || echo "No dependencies to list"
     fi
 
     # Estrai i file .tgz se richiesto
@@ -153,7 +153,7 @@ function setupHelmDeps()
         for filename in *.tgz; do 
             if [[ -f "$filename" ]]; then
                 # Verifica che sia un chart Helm valido prima di estrarlo
-                if tar -tzf "$filename" | grep -q -E "(Chart.yaml|chart.yaml)" 2>/dev/null; then
+                if tar -tzf "$filename" | grep -q -E "(Chart.yaml|chart.yaml)" ; then
                     if [[ $verbose == true ]]; then
                         echo "Extracting chart: $filename"
                     fi
@@ -175,7 +175,7 @@ function setupHelmDeps()
 
     set +e
     # Install helm diff plugin (ignora errori se già installato)
-    helm plugin install https://github.com/databus23/helm-diff 2>/dev/null
+    helm plugin install https://github.com/databus23/helm-diff 
     diff_plugin_result=$?
     if [[ $verbose == true ]]; then
         echo "Helm-Diff plugin install result: $diff_plugin_result"
