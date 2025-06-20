@@ -69,9 +69,6 @@ jobs:
   microservices_validation:
     name: Microservices - Template & Lint
     runs-on: ubuntu-22.04
-    env:
-      HELM_MAX_CHART_FILE_SIZE: 9223372036854775807
-      HELM_MAX_DECOMPRESSED_SIZE: 9223372036854775807
     steps:
       - name: Checkout
         id: checkout
