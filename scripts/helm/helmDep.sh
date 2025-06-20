@@ -137,7 +137,7 @@ function setupHelmDeps()
     fi
     
     echo "-- Build chart dependencies --"
-    dep_up_result=$(helm dep up)
+    dep_up_result=$(helm dep up --destination ./charts)
     if [[ $verbose == true ]]; then
         echo "$dep_up_result"
     fi
