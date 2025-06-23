@@ -12,6 +12,7 @@ help()
 
 PROJECT_DIR=${PROJECT_DIR:-$(pwd)}
 ROOT_DIR=$PROJECT_DIR
+[[ -f "$ROOT_DIR/Chart.yaml" ]] || ROOT_DIR="$PROJECT_DIR/chart"
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 args=$#
