@@ -1,6 +1,5 @@
 #!/bin/bash
 set -euo pipefail
-echo ">>> helmDep.sh CALLED with args: $@"
 
 help()
 {
@@ -39,62 +38,70 @@ do
         *)
           echo "Unexpected option: $1"
           help
+
           ;;
     esac
 done
 
-function setupHelmDeps() {
+function setupHelmDeps() 
+{
     untar=$1
 
-    echo "-- Helm dependencies setup started --"
-    helm version --short
-
-    TMP_CHART_DIR=$(mktemp -d)
-    echo "Creating temp chart dir: $TMP_CHART_DIR"
-
-    cp "$ROOT_DIR/Chart.yaml" "$TMP_CHART_DIR/"
-    cp "$ROOT_DIR/Chart.lock" "$TMP_CHART_DIR/" 2>/dev/null || true
-    mkdir -p "$TMP_CHART_DIR/charts"
-
-    cd "$TMP_CHART_DIR"
-
+    cd $ROOT_DIR
+    
+    rm -rf charts
+    echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
     helm repo add interop-eks-cronjob-chart https://pagopa.github.io/interop-eks-cronjob-chart > /dev/null
 
-    echo "-- Update PagoPA eks repos --"
-    helm repo update > /dev/null
+    echo "-- Update PagoPA eks repo --"
+    helm repo update interop-eks-microservice-chart > /dev/null
+    helm repo update interop-eks-cronjob-chart > /dev/null
 
     if [[ $verbose == true ]]; then
         echo "-- Search PagoPA charts in repo --"
-        helm search repo interop-eks-microservice-chart
-        helm search repo interop-eks-cronjob-chart
     fi
+    helm search repo interop-eks-microservice-chart > /dev/null
+    helm search repo interop-eks-cronjob-chart > /dev/null
 
-    echo "-- Build chart dependencies --"
-    helm dependency build --debug
-
-    echo "-- List chart dependencies (after build) --"
-    helm dependency list --debug | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+    if [[ $verbose == true ]]; then
+        echo "-- List chart dependencies --"
+    fi
+    helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+    
+    if [[ $verbose == true ]]; then
+        echo "-- Build chart dependencies --"
+    fi
+    # only first time
+    #helm dep build 
+    dep_up_result=$(helm dep up)
+    if [[ $verbose == true ]]; then
+        echo $dep_up_result
+    fi
 
     if [[ $untar == true ]]; then
         cd charts
         for filename in *.tgz; do 
-            tar -xf "$filename" && rm -f "$filename"
-        done
+            tar -xf "$filename" && rm -f "$filename";
+        done;
+
         cd ..
     fi
 
     set +e
+    # Install helm diff plugin
     helm plugin install https://github.com/databus23/helm-diff
     diff_plugin_result=$?
-    if [[ $verbose == true ]]; then
+     if [[ $verbose == true ]]; then
         echo "Helm-Diff plugin install result: $diff_plugin_result"
     fi
     set -e
 
+    cd -
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
+
 
 setupHelmDeps $untar
