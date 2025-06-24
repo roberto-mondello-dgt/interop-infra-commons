@@ -25,7 +25,7 @@ fi
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 args=$#
-untar=true
+untar=false
 step=1
 verbose=false
 
