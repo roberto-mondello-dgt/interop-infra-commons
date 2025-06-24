@@ -39,7 +39,6 @@ do
         *)
           echo "Unexpected option: $1"
           help
-
           ;;
     esac
 done
@@ -47,62 +46,61 @@ done
 function setupHelmDeps() 
 {
     untar=$1
+    cd "$ROOT_DIR"
 
-    cd $ROOT_DIR
-    
-    rm -rf charts
     echo "# Helm dependencies setup #"
+
+    mkdir -p charts
+    cp Chart.yaml charts/
+    [[ -f Chart.lock ]] && cp Chart.lock charts/
+
+    cd charts
+
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
     helm repo add interop-eks-cronjob-chart https://pagopa.github.io/interop-eks-cronjob-chart > /dev/null
 
     echo "-- Update PagoPA eks repo --"
-    helm repo update interop-eks-microservice-chart > /dev/null
-    helm repo update interop-eks-cronjob-chart > /dev/null
+    helm repo update > /dev/null
 
     if [[ $verbose == true ]]; then
         echo "-- Search PagoPA charts in repo --"
+        helm search repo interop-eks-microservice-chart > /dev/null
+        helm search repo interop-eks-cronjob-chart > /dev/null
     fi
-    helm search repo interop-eks-microservice-chart > /dev/null
-    helm search repo interop-eks-cronjob-chart > /dev/null
 
     if [[ $verbose == true ]]; then
         echo "-- List chart dependencies --"
-    fi
-    helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
-    
-    if [[ $verbose == true ]]; then
+        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
         echo "-- Build chart dependencies --"
     fi
-    # only first time
-    #helm dep build 
+
     dep_up_result=$(helm dep up)
     if [[ $verbose == true ]]; then
-        echo $dep_up_result
+        echo "$dep_up_result"
     fi
 
     if [[ $untar == true ]]; then
-        cd charts
         for filename in *.tgz; do 
-            tar -xf "$filename" && rm -f "$filename";
-        done;
-
-        cd ..
+            tar -xf "$filename" && rm -f "$filename"
+        done
     fi
 
+    # Pulizia: rimuove Chart.yaml e Chart.lock temporanei
+    rm -f Chart.yaml Chart.lock
+
+    cd "$ROOT_DIR"
+
     set +e
-    # Install helm diff plugin
     helm plugin install https://github.com/databus23/helm-diff
     diff_plugin_result=$?
-     if [[ $verbose == true ]]; then
+    if [[ $verbose == true ]]; then
         echo "Helm-Diff plugin install result: $diff_plugin_result"
     fi
     set -e
 
-    cd -
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
 
-
-setupHelmDeps $untar
+setupHelmDeps "$untar"
