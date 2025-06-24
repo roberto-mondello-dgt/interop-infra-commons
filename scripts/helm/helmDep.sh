@@ -11,7 +11,7 @@ help()
 }
 
 PROJECT_DIR=${PROJECT_DIR:-$(pwd)}
-ROOT_DIR="$PROJECT_DIR"
+ROOT_DIR=$(git rev-parse --show-toplevel)
 
 # Robustly check Chart.yaml
 if [[ ! -f "$ROOT_DIR/Chart.yaml" ]]; then
