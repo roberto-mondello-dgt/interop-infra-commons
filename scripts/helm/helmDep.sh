@@ -95,6 +95,8 @@ function setupHelmDeps()
                 rm -f "$filename"
             done
         fi
+            echo "-- Debugging extracted chart directories --"
+            ls -la "$ROOT_DIR/charts"
     fi
 
     # Pulizia temporanea
