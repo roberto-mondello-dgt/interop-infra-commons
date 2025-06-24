@@ -49,13 +49,12 @@ function setupHelmDeps()
 
     cd "$ROOT_DIR"
 
-    # Pulizia pre-esistente
     rm -rf charts
     mkdir -p charts
 
-    # Copia temporanea Chart.yaml per permettere a helm di lavorare correttamente nella struttura attuale
+    # Copia Chart.yaml temporaneamente in charts/
     cp Chart.yaml charts/
-    
+
     echo "# Helm dependencies setup #"
     echo "-- Add PagoPA eks repos --"
     helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
@@ -74,13 +73,11 @@ function setupHelmDeps()
         helm search repo interop-eks-cronjob-chart > /dev/null
     fi
 
-    if [[ $verbose == true ]]; then
-        echo "-- List chart dependencies --"
-        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
-    fi
+    echo "-- Build chart dependencies --"
+    cd charts
 
     if [[ $verbose == true ]]; then
-        echo "-- Build chart dependencies --"
+        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     fi
 
     dep_up_result=$(helm dep up)
@@ -89,20 +86,18 @@ function setupHelmDeps()
     fi
 
     if [[ $untar == true ]]; then
-        cd charts
         if compgen -G "*.tgz" > /dev/null; then
             for filename in *.tgz; do 
                 tar -xf "$filename" && rm -f "$filename"
             done
         fi
-        cd ..
     fi
 
-    # Pulizia del Chart.yaml temporaneo
-    rm -f charts/Chart.yaml
+    # Pulizia temporanea
+    rm -f Chart.yaml
+    cd ..
 
     set +e
-    # Install helm diff plugin solo se non è già installato
     if ! helm plugin list | grep -q "diff"; then
         helm plugin install https://github.com/databus23/helm-diff
         diff_plugin_result=$?
@@ -114,7 +109,6 @@ function setupHelmDeps()
     fi
     set -e
 
-    cd -
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
