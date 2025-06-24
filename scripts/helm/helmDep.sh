@@ -88,7 +88,8 @@ function setupHelmDeps()
     if [[ $untar == true ]]; then
         if compgen -G "*.tgz" > /dev/null; then
             for filename in *.tgz; do 
-                tar -xf "$filename" && rm -f "$filename"
+                tar -xf "$filename" 
+                # rm -f "$filename"
             done
         fi
     fi
