@@ -10,18 +10,16 @@ help()
     exit 2
 }
 
-PROJECT_DIR=${PROJECT_DIR:-$(pwd)}
-ROOT_DIR=$(git rev-parse --show-toplevel)
+PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
 
-# Robustly check Chart.yaml
-if [[ ! -f "$ROOT_DIR/Chart.yaml" ]]; then
-    echo "[DEBUG] Chart.yaml not found at $ROOT_DIR. Checking '$PROJECT_DIR/chart'..."
-    if [[ -f "$PROJECT_DIR/chart/Chart.yaml" ]]; then
-        ROOT_DIR="$PROJECT_DIR/chart"
-    else
-        echo "[ERROR] Chart.yaml not found in either $PROJECT_DIR or $PROJECT_DIR/chart"
-        exit 1
-    fi
+# Determina ROOT_DIR in modo statico (senza git)
+if [[ -f "$PROJECT_DIR/Chart.yaml" ]]; then
+    ROOT_DIR="$PROJECT_DIR"
+elif [[ -f "$PROJECT_DIR/chart/Chart.yaml" ]]; then
+    ROOT_DIR="$PROJECT_DIR/chart"
+else
+    echo "[ERROR] Chart.yaml not found in either $PROJECT_DIR or $PROJECT_DIR/chart"
+    exit 1
 fi
 
 SCRIPTS_FOLDER="$(cd "$(dirname \"${BASH_SOURCE[0]}\")" && pwd)"
