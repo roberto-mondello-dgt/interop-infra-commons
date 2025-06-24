@@ -52,7 +52,10 @@ jobs:
           CHART_TYPE: ${{ matrix.chartType }}
         run: |
           set -euo pipefail
-
+          SCRIPTS_FOLDER="./interop-infra-commons/scripts/helm"
+          echo "[DEBUG] Contents of $SCRIPTS_FOLDER"
+          ls -la "$SCRIPTS_FOLDER"
+          
           OPTIONS=""
 
           if [[ $CHART_TYPE == "microservice" ]]; then
