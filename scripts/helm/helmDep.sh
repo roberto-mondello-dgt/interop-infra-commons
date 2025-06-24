@@ -22,7 +22,7 @@ else
     exit 1
 fi
 
-SCRIPTS_FOLDER="$(cd "$(dirname \"${BASH_SOURCE[0]}\")" && pwd)"
+SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 args=$#
 untar=false
