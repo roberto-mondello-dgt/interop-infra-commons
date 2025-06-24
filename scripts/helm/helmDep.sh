@@ -93,6 +93,7 @@ function setupHelmDeps()
                 mkdir -p "$dirname"
                 tar -xzf "$filename" -C "$dirname" --strip-components=1
                 rm -f "$filename"
+            done
         fi
     fi
 
