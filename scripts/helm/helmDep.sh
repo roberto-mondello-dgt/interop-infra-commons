@@ -89,7 +89,7 @@ function setupHelmDeps()
         helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
     fi
 
-    dep_up_result=$(helm dep build)
+    dep_up_result=$(helm dep up)
     if [[ $verbose == true ]]; then
         echo "$dep_up_result"
     fi
