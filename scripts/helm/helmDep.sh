@@ -1,28 +1,20 @@
 #!/bin/bash
 set -euo pipefail
 
-help()
-{
-    echo "Usage: 
+help() {
+    echo "Usage:
         [ -u | --untar ] Untar downloaded charts
         [ -v | --verbose ] Show debug messages
-        [ -h | --help ] This help" 
+        [ -h | --help ] This help"
     exit 2
 }
 
 PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
-
-# Determina ROOT_DIR in modo statico (senza git)
-if [[ -f "$PROJECT_DIR/Chart.yaml" ]]; then
-    ROOT_DIR="$PROJECT_DIR"
-elif [[ -f "$PROJECT_DIR/chart/Chart.yaml" ]]; then
-    ROOT_DIR="$PROJECT_DIR/chart"
-else
-    echo "[ERROR] Chart.yaml not found in either $PROJECT_DIR or $PROJECT_DIR/chart"
-    exit 1
-fi
+ROOT_DIR="$PROJECT_DIR"
 
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+
 
 args=$#
 untar=false
@@ -48,20 +40,25 @@ do
         *)
           echo "Unexpected option: $1"
           help
+
           ;;
     esac
 done
 
-function setupHelmDeps() 
+function setupHelmDeps()
 {
-    local untar=$1
+    untar=$1
 
     cd "$ROOT_DIR"
 
-    rm -rf charts
+    if [[ $verbose == true ]]; then
+        echo "Creating directory charts"
+    fi
     mkdir -p charts
 
-    # Copia Chart.yaml temporaneamente in charts/
+    if [[ $verbose == true ]]; then
+        echo "Copying Chart.yaml to charts"
+    fi
     cp Chart.yaml charts/
 
     echo "# Helm dependencies setup #"
@@ -75,45 +72,57 @@ function setupHelmDeps()
 
     if [[ $verbose == true ]]; then
         echo "-- Search PagoPA charts in repo --"
-        helm search repo interop-eks-microservice-chart
-        helm search repo interop-eks-cronjob-chart
-    else
-        helm search repo interop-eks-microservice-chart > /dev/null
-        helm search repo interop-eks-cronjob-chart > /dev/null
     fi
+    helm search repo interop-eks-microservice-chart > /dev/null
+    helm search repo interop-eks-cronjob-chart > /dev/null
 
-    echo "-- Build chart dependencies --"
+    if [[ $verbose == true ]]; then
+        echo "-- List chart dependencies --"
+    fi
+    helm dep list charts | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+
     cd charts
 
     if [[ $verbose == true ]]; then
-        helm dep list | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+        echo "-- Build chart dependencies --"
     fi
-
+    # only first time
+    #helm dep build
     dep_up_result=$(helm dep up)
     if [[ $verbose == true ]]; then
-        echo "$dep_up_result"
+        echo $dep_up_result
     fi
+
+    cd "$ROOT_DIR"
+    mkdir -p charts
 
     if [[ $untar == true ]]; then
-        if compgen -G "*.tgz" > /dev/null; then
-            for filename in *.tgz; do 
-                dirname=$(basename "$filename" .tgz)
-                rm -rf "$dirname"
-                mkdir -p "$dirname"
-                tar -xzf "$filename" -C "$dirname" --strip-components=1
-                rm -f "$filename"
-            done
+        for filename in charts/charts/*.tgz; do
+            [ -e "$filename" ] || continue
+            echo "Processing $filename"
+            basename_file=$(basename "$filename" .tgz)
+            chart_name="${basename_file%-*}"
+            target_dir="charts/$chart_name"
+
+            echo "→ Extracting to $target_dir"
+            mkdir -p "$target_dir"
+            tar -xzf "$filename" -C "$target_dir" --strip-components=1
+            rm -f "$filename"
+        done
+    else
+        if find charts/charts -maxdepth 1 -name '*.tgz' | grep -q .; then
+            mv charts/charts/*.tgz charts/
         fi
-        echo "-- Debugging extracted chart directories --"
-        ls -la "$ROOT_DIR/charts"
     fi
 
-    # Pulizia temporanea
-    rm -f Chart.yaml
-    cd ..
+    if [[ -d charts/charts && -z "$(ls -A charts/charts)" ]]; then
+        rmdir charts/charts
+    fi
+
 
     set +e
-    if ! helm plugin list | grep -q "diff"; then
+    # Install helm diff plugin
+     if ! helm plugin list | grep -q "diff"; then
         helm plugin install https://github.com/databus23/helm-diff
         diff_plugin_result=$?
     else
@@ -124,8 +133,10 @@ function setupHelmDeps()
     fi
     set -e
 
+    cd "$ROOT_DIR/charts"
     echo "-- Helm dependencies setup ended --"
     exit 0
 }
+
 
 setupHelmDeps $untar
