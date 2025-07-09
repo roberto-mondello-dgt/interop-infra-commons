@@ -159,6 +159,8 @@ fi
 
 echo "📂 Listing contents of charts directory:"
 ls -la "$ROOT_DIR/charts"
+ls -la "$ROOT_DIR/charts/interop-eks-microservice-chart"
+ls -la "$ROOT_DIR/charts/interop-eks-cronjob-chart"
 
 # if [[ $skip_dep == false ]]; then
 #   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar
