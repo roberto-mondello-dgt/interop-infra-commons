@@ -1,142 +1,273 @@
-#!/bin/bash
-set -euo pipefail
+name: Validation Steps
 
-help() {
-    echo "Usage:
-        [ -u | --untar ] Untar downloaded charts
-        [ -v | --verbose ] Show debug messages
-        [ -h | --help ] This help"
-    exit 2
-}
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: 'Environment to run tests against'
+        required: true
+        type: string
+      infra_commons_tag:
+        required: false
+        type: string
+      strict_kube_linter_checks:
+        description: 'Enable strict kube-linter checks'
+        required: false
+        type: boolean
 
-PROJECT_DIR="${PROJECT_DIR:-$(pwd)}"
-ROOT_DIR="$PROJECT_DIR"
+defaults:
+  run:
+    shell: bash
 
-SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+env:
+  SCRIPTS_FOLDER: "./interop-infra-commons/scripts/helm"
 
+jobs:
+  chart_validation:
+    name: Helm Chart validation
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        chartType: ["microservice", "cronjob"]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
 
+      - name: Print inputs passed in
+        run: |
+          echo "Using infra_commons_tag: ${{ inputs.infra_commons_tag }}"
+          echo "Using strict_kube_linter_checks: ${{ inputs.strict_kube_linter_checks }}"
+          echo "Using environment: ${{ inputs.environment }}"
 
-args=$#
-untar=false
-step=1
-verbose=false
+      - name: Checkout scripts repository
+        uses: actions/checkout@v4
+        with:
+          repository: Bobbetto/interop-infra-commons
+          path: interop-infra-commons
+          fetch-depth: 0
+          sparse-checkout: 'scripts/helm'
+          ref: ${{ inputs.infra_commons_tag }}
 
-for (( i=0; i<$args; i+=$step ))
-do
-    case "$1" in
-        -u| --untar )
-          untar=true
-          step=1
-          shift 1
-          ;;
-        -v| --verbose )
-          verbose=true
-          step=1
-          shift 1
-          ;;
-        -h | --help )
-          help
-          ;;
-        *)
-          echo "Unexpected option: $1"
-          help
+      - name: Helm Chart Linting
+        id: helm_lint
+        env:
+          CHART_TYPE: ${{ matrix.chartType }}
+        run: |
+          set -euo pipefail
 
-          ;;
-    esac
-done
+          OPTIONS=""
 
-function setupHelmDeps()
-{
-    untar=$1
+          if [[ $CHART_TYPE == "microservice" ]]; then
+            OPTIONS=" --microservices "
+          elif [[ $CHART_TYPE == "cronjob" ]]; then
+            OPTIONS=" --jobs "
+          else
+            echo "Workflow cannot be run on selected chart $CHART_TYPE"
+            exit 1
+          fi
 
-    cd "$ROOT_DIR"
+          export PROJECT_DIR=$(pwd)
+          CHART_PATH="./charts/${{ inputs.environment }}"
 
-    if [[ $verbose == true ]]; then
-        echo "Creating directory charts"
-    fi
-    mkdir -p charts
+          $SCRIPTS_FOLDER/helmLint-main.sh \
+          --debug \
+          --environment ${{ inputs.environment }} \
+          --output console \
+          $OPTIONS \
+          --chart-path $CHART_PATH \
+          -i $PROJECT_DIR/commons/${{ inputs.environment }}/images.yaml
 
-    if [[ $verbose == true ]]; then
-        echo "Copying Chart.yaml to charts"
-    fi
-    cp Chart.yaml charts/
+  microservices_validation:
+    name: Microservices - Template & Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
 
-    echo "# Helm dependencies setup #"
-    echo "-- Add PagoPA eks repos --"
-    helm repo add interop-eks-microservice-chart https://pagopa.github.io/interop-eks-microservice-chart > /dev/null
-    helm repo add interop-eks-cronjob-chart https://pagopa.github.io/interop-eks-cronjob-chart > /dev/null
+      - name: Checkout scripts repository
+        uses: actions/checkout@v4
+        with:
+          repository: Bobbetto/interop-infra-commons
+          path: interop-infra-commons
+          fetch-depth: 0
+          sparse-checkout: 'scripts/helm'
+          ref: ${{ inputs.infra_commons_tag }}
 
-    echo "-- Update PagoPA eks repo --"
-    helm repo update interop-eks-microservice-chart > /dev/null
-    helm repo update interop-eks-cronjob-chart > /dev/null
+      - name: Kube-linter download
+        run: |
+          set -euo pipefail
+          curl -sSLO https://github.com/stackrox/kube-linter/releases/download/v0.7.1/kube-linter-linux.tar.gz
+          tar -xzf kube-linter-linux.tar.gz
+          chmod +x kube-linter
+          sudo mv kube-linter /usr/local/bin/kube-linter
+          rm kube-linter-linux.tar.gz
+          kube-linter version
 
-    if [[ $verbose == true ]]; then
-        echo "-- Search PagoPA charts in repo --"
-    fi
-    helm search repo interop-eks-microservice-chart > /dev/null
-    helm search repo interop-eks-cronjob-chart > /dev/null
+      - name: Get Microservices List
+        id: get_microservices
+        env:
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          MICROSERVICES=$(find microservices -type f -path "*/$TARGET_ENVIRONMENT/values.yaml" -exec dirname {} \; | awk -F'/' '{print $2}' | tr '\n' ' ')
+          echo "microservices=$MICROSERVICES" >> $GITHUB_OUTPUT
 
-    if [[ $verbose == true ]]; then
-        echo "-- List chart dependencies --"
-    fi
-    helm dep list charts | awk '{printf "%-35s %-15s %-20s\n", $1, $2, $3}'
+      - name: Microservices Template & Lint
+        env:
+          MICROSERVICES: ${{ steps.get_microservices.outputs.microservices }}
+        run: |
+          set -euo pipefail
 
-    cd charts
-
-    if [[ $verbose == true ]]; then
-        echo "-- Build chart dependencies --"
-    fi
-    # only first time
-    #helm dep build
-    dep_up_result=$(helm dep up)
-    if [[ $verbose == true ]]; then
-        echo $dep_up_result
-    fi
-
-    cd "$ROOT_DIR"
-    mkdir -p charts
-
-    if [[ $untar == true ]]; then
-        for filename in charts/charts/*.tgz; do
-            [ -e "$filename" ] || continue
-            echo "Processing $filename"
-            basename_file=$(basename "$filename" .tgz)
-            chart_name="${basename_file%-*}"
-            target_dir="charts/$chart_name"
-
-            echo "→ Extracting to $target_dir"
-            mkdir -p "$target_dir"
-            tar -xzf "$filename" -C "$target_dir" --strip-components=1
-            rm -f "$filename"
-        done
-    else
-        if find charts/charts -maxdepth 1 -name '*.tgz' | grep -q .; then
-            mv charts/charts/*.tgz charts/
-        fi
-    fi
-
-    if [[ -d charts/charts && -z "$(ls -A charts/charts)" ]]; then
-        rmdir charts/charts
-    fi
-
-
-    set +e
-    # Install helm diff plugin
-     if ! helm plugin list | grep -q "diff"; then
-        helm plugin install https://github.com/databus23/helm-diff
-        diff_plugin_result=$?
-    else
-        diff_plugin_result=0
-    fi
-    if [[ $verbose == true ]]; then
-        echo "Helm-Diff plugin install result: $diff_plugin_result"
-    fi
-    set -e
-
-    cd "$ROOT_DIR/charts"
-    echo "-- Helm dependencies setup ended --"
-    exit 0
-}
+          export PROJECT_DIR=$(pwd)
+          FAILED_MICROSERVICES=""
+          VALIDATION_ERROR_FLAG=0
 
 
-setupHelmDeps $untar
+          if [[ -n "$MICROSERVICES" ]]; then
+            set +e
+            for MICROSERVICE_NAME in $MICROSERVICES; do
+              echo "=== Processing microservice: $MICROSERVICE_NAME ==="
+              TEMPLATE_OUTPUT_PATH="/tmp/helm-template-${MICROSERVICE_NAME}.yaml"
+
+              echo "Templating microservice: $MICROSERVICE_NAME"
+              $SCRIPTS_FOLDER/helmTemplate-svc-single.sh \
+                --debug \
+                --environment ${{ inputs.environment }} \
+                --microservice $MICROSERVICE_NAME \
+                -i $PROJECT_DIR/commons/${{ inputs.environment }}/images.yaml \
+                --output console > $TEMPLATE_OUTPUT_PATH
+
+              if [[ $? -ne 0 ]]; then
+                echo "Template generation failed for microservice: $MICROSERVICE_NAME"
+                FAILED_MICROSERVICES="${FAILED_MICROSERVICES}${MICROSERVICE_NAME}(template) "
+                VALIDATION_ERROR_FLAG=1
+                continue
+              fi
+
+              echo "Linting microservice: $MICROSERVICE_NAME"
+              kube-linter lint $TEMPLATE_OUTPUT_PATH
+              LINTER_EXIT_CODE=$?
+
+              if [[ $LINTER_EXIT_CODE -ne 0 ]]; then
+                echo "Linting failed for microservice: $MICROSERVICE_NAME"
+                FAILED_MICROSERVICES="${FAILED_MICROSERVICES}${MICROSERVICE_NAME}(lint) "
+                if [[ "${{ inputs.strict_kube_linter_checks }}" == "true" ]]; then
+                  VALIDATION_ERROR_FLAG=1
+                fi
+              else
+                echo "Microservice $MICROSERVICE_NAME passed all checks"
+              fi
+
+              echo "=== Completed processing microservice: $MICROSERVICE_NAME ==="
+              echo ""
+            done
+          else
+            echo "No microservices found for environment ${{ inputs.environment }}"
+          fi
+
+          if [[ -n "$FAILED_MICROSERVICES" ]]; then
+            echo "Some microservices failed validation. Failed items: $FAILED_MICROSERVICES"
+            if [[ $VALIDATION_ERROR_FLAG -eq 1 ]]; then
+              exit 1
+            fi
+          else
+            echo "All microservices passed validation successfully"
+          fi
+
+  cronjobs_validation:
+    name: Cronjobs - Template & Lint
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Checkout scripts repository
+        uses: actions/checkout@v4
+        with:
+          repository: Bobbetto/interop-infra-commons
+          path: interop-infra-commons
+          fetch-depth: 0
+          sparse-checkout: 'scripts/helm'
+          ref: ${{ inputs.infra_commons_tag }}
+
+      - name: Kube-linter download
+        run: |
+          set -euo pipefail
+          curl -sSLO https://github.com/stackrox/kube-linter/releases/download/v0.7.1/kube-linter-linux.tar.gz
+          tar -xzf kube-linter-linux.tar.gz
+          chmod +x kube-linter
+          sudo mv kube-linter /usr/local/bin/kube-linter
+          rm kube-linter-linux.tar.gz
+          kube-linter version
+
+      - name: Get Cronjobs List
+        id: get_cronjobs
+        env:
+          TARGET_ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          CRONJOBS=$(find jobs -type f -path "*/$TARGET_ENVIRONMENT/values.yaml" -exec dirname {} \; | awk -F'/' '{print $2}' | tr '\n' ' ')
+          echo "cronjobs=$CRONJOBS" >> $GITHUB_OUTPUT
+
+      - name: Cronjobs Template & Lint
+        env:
+          CRONJOBS: ${{ steps.get_cronjobs.outputs.cronjobs }}
+        run: |
+          set -euo pipefail
+
+          export PROJECT_DIR=$(pwd)
+          FAILED_CRONJOBS=""
+          VALIDATION_ERROR_FLAG=0
+
+          if [[ -n "$CRONJOBS" ]]; then
+            set +e
+            for CRONJOB_NAME in $CRONJOBS; do
+              echo "=== Processing cronjob: $CRONJOB_NAME ==="
+              TEMPLATE_OUTPUT_PATH="/tmp/helm-template-cronjob-${CRONJOB_NAME}.yaml"
+
+              echo "Templating cronjob: $CRONJOB_NAME"
+              $SCRIPTS_FOLDER/helmTemplate-cron-single.sh \
+                --debug \
+                --environment ${{ inputs.environment }} \
+                --job $CRONJOB_NAME \
+                -i $PROJECT_DIR/commons/${{ inputs.environment }}/images.yaml \
+                --output console > $TEMPLATE_OUTPUT_PATH
+
+              if [[ $? -ne 0 ]]; then
+                echo "Template generation failed for cronjob: $CRONJOB_NAME"
+                FAILED_CRONJOBS="${FAILED_CRONJOBS}${CRONJOB_NAME}(template) "
+                VALIDATION_ERROR_FLAG=1
+                continue
+              fi
+
+              echo "Linting cronjob: $CRONJOB_NAME"
+              kube-linter lint $TEMPLATE_OUTPUT_PATH
+              LINTER_EXIT_CODE=$?
+
+              if [[ $LINTER_EXIT_CODE -ne 0 ]]; then
+                echo "Linting failed for cronjob: $CRONJOB_NAME"
+                FAILED_CRONJOBS="${FAILED_CRONJOBS}${CRONJOB_NAME}(lint) "
+                if [[ "${{ inputs.strict_kube_linter_checks }}" == "true" ]]; then
+                  VALIDATION_ERROR_FLAG=1
+                fi
+              else
+                echo "Cronjob $CRONJOB_NAME passed all checks"
+              fi
+
+              echo "=== Completed processing cronjob: $CRONJOB_NAME ==="
+              echo ""
+            done
+          else
+            echo "No cronjobs found for environment ${{ inputs.environment }}"
+          fi
+
+          if [[ -n "$FAILED_CRONJOBS" ]]; then
+            echo "Some cronjobs failed validation. Failed items: $FAILED_CRONJOBS"
+            if [[ $VALIDATION_ERROR_FLAG -eq 1 ]]; then
+              exit 1
+            fi
+          else
+            echo "All cronjobs passed validation successfully"
+          fi
