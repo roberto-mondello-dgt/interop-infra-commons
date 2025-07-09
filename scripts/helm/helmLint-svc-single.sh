@@ -150,6 +150,7 @@ if [[ $output_redirect == "console" ]]; then
   OUTPUT_TO=""
 fi
 
+echo chart_location: $chart_location
 LINT_CMD+=" \"$chart_location\""
 LINT_CMD+=" -f \"$ROOT_DIR/commons/$ENV/values-microservice.compiled.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/microservices/$microservice/$ENV/values.yaml\""
