@@ -144,6 +144,9 @@ if [[ $skip_dep == false ]]; then
   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path_resolved"
 fi
 
+echo "📂 Listing contents of charts directory:"
+ls -la "$ROOT_DIR/charts"
+
 # if [[ $skip_dep == false ]]; then
 #   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar
 # fi
