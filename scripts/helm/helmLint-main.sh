@@ -141,25 +141,15 @@ if [[ -n $images_file ]]; then
 fi
 
 if [[ $skip_dep == false ]]; then
-  echo "🔧 Using chart_path: $chart_path"
   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path"
 fi
-
-echo "Listing contents of charts directory:"
-ls -la "$ROOT_DIR/charts"
-ls -la "$ROOT_DIR/charts/interop-eks-microservice-chart"
-ls -la "$ROOT_DIR/charts/interop-eks-cronjob-chart"
-
-# if [[ $skip_dep == false ]]; then
-#   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar
-# fi
 
 if [[ -n $chart_path ]]; then
   OPTIONS=$OPTIONS" -cp $chart_path"
 fi
+
 # Skip further execution of helm deps build and update since we have already done it in the previous line
 OPTIONS=$OPTIONS" -sd"
-
 
 if [[ $lint_microservices == true ]]; then
   echo "Start linting microservices"

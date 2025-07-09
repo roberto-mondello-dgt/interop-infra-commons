@@ -138,8 +138,6 @@ fi
 # Find image version and digest
 bash "$SCRIPTS_FOLDER"/image-version-reader-v2.sh -e $environment -j $job $IMAGE_VERSION_READER_OPTIONS
 
-chart_location="$ROOT_DIR/charts/interop-eks-cronjob-chart"
-
 LINT_CMD="helm lint"
 if [[ $enable_debug == true ]]; then
   LINT_CMD+=" --debug"
@@ -150,7 +148,7 @@ if [[ $output_redirect == "console" ]]; then
   OUTPUT_TO=""
 fi
 
-LINT_CMD+=" \"$chart_location\""
+LINT_CMD+=" \"$ROOT_DIR/charts/interop-eks-cronjob-chart\""
 LINT_CMD+=" -f \"$ROOT_DIR/commons/$ENV/values-cronjob.compiled.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/jobs/$job/$ENV/values.yaml\""
 LINT_CMD+=" --set enableLookup=false"
