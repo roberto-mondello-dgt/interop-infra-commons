@@ -113,6 +113,13 @@ if [[ $skip_dep == false ]]; then
   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path"
 fi
 
+if [[ -f "$chart_path" ]]; then
+  chart_path=$(dirname "$chart_path")
+elif [[ ! -f "$chart_path/Chart.yaml" ]]; then
+  echo "❌ Error: Chart.yaml not found in '$chart_path'"
+  exit 1
+fi
+
 VALID_CONFIG=$(isMicroserviceEnvConfigValid $microservice $environment)
 if [[ -z $VALID_CONFIG || $VALID_CONFIG == "" ]]; then
   echo "Environment configuration '$environment' not found for microservice '$microservice'"
