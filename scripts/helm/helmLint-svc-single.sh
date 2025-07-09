@@ -150,14 +150,11 @@ if [[ $output_redirect == "console" ]]; then
   OUTPUT_TO=""
 fi
 
-echo chart_location: $chart_location
 LINT_CMD+=" \"$chart_location\""
 LINT_CMD+=" -f \"$ROOT_DIR/commons/$ENV/values-microservice.compiled.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/microservices/$microservice/$ENV/values.yaml\""
 LINT_CMD+=" --set enableLookup=false"
 LINT_CMD+=" $OUTPUT_TO"
-echo "Running command: $LINT_CMD"
-
 
 eval $LINT_CMD
 
