@@ -156,7 +156,7 @@ LINT_CMD+=" -f \"$ROOT_DIR/commons/$ENV/values-microservice.compiled.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/microservices/$microservice/$ENV/values.yaml\""
 LINT_CMD+=" --set enableLookup=false"
 LINT_CMD+=" $OUTPUT_TO"
-
+echo "Running command: $LINT_CMD"
 
 
 eval $LINT_CMD
