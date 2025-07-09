@@ -145,7 +145,7 @@ fi
 # Find image version and digest
 . "$SCRIPTS_FOLDER"/image-version-reader-v2.sh -e $environment -m $microservice $IMAGE_VERSION_READER_OPTIONS
 
-chart_location=$(dirname "$chart_path")
+chart_location="$chart_path"
 
 LINT_CMD="helm lint "
 if [[ $enable_debug == true ]]; then
