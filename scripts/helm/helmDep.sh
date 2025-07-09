@@ -53,9 +53,6 @@ do
     esac
 done
 
-if [[ -n $chart_path ]]; then
-    CHART_PATH=$chart_path
-fi
 #echo "Using Chart.yaml path: $CHART_PATH"
 
 
