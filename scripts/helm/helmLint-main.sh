@@ -102,6 +102,10 @@ do
 done
 echo "Arguments: $@"
 
+if [[ -n "$chart_path" && -d "$chart_path" && -f "$chart_path/Chart.yaml" ]]; then
+  chart_path="$chart_path/Chart.yaml"
+fi
+
 if [[ -z $environment || $environment == "" ]]; then
   echo "Environment cannot be null"
   help
