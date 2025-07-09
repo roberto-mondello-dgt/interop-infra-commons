@@ -44,7 +44,7 @@ jobs:
       - name: Checkout scripts repository
         uses: actions/checkout@v4
         with:
-          repository: Bobbetto/interop-infra-commons
+          repository: roberto-mondello-dgt/interop-infra-commons
           path: interop-infra-commons
           fetch-depth: 0
           sparse-checkout: 'scripts/helm'
@@ -90,7 +90,7 @@ jobs:
       - name: Checkout scripts repository
         uses: actions/checkout@v4
         with:
-          repository: Bobbetto/interop-infra-commons
+          repository: roberto-mondello-dgt/interop-infra-commons
           path: interop-infra-commons
           fetch-depth: 0
           sparse-checkout: 'scripts/helm'
@@ -187,7 +187,7 @@ jobs:
       - name: Checkout scripts repository
         uses: actions/checkout@v4
         with:
-          repository: Bobbetto/interop-infra-commons
+          repository: roberto-mondello-dgt/interop-infra-commons
           path: interop-infra-commons
           fetch-depth: 0
           sparse-checkout: 'scripts/helm'
