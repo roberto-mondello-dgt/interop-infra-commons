@@ -103,27 +103,19 @@ done
 echo "Arguments: $@"
 
 # Normalize chart_path to Chart.yaml if it's a directory
-# if [[ -n "$chart_path" && -d "$chart_path" ]]; then
-#   if [[ -f "$chart_path/Chart.yaml" ]]; then
-#     chart_path="$chart_path/Chart.yaml"
-#   else
-#     echo "Error: Chart.yaml not found in directory '$chart_path'"
-#     exit 1
-#   fi
-# elif [[ ! -f "$chart_path" ]]; then
-#   echo "Error: Specified chart_path '$chart_path' does not exist"
-#   exit 1
-# fi
-
 if [[ -n "$chart_path" && -d "$chart_path" ]]; then
-  if [[ ! -f "$chart_path/Chart.yaml" ]]; then
+  if [[ -f "$chart_path/Chart.yaml" ]]; then
+    chart_path="$chart_path/Chart.yaml"
+    echo "Using Chart.yaml path: $chart_path"
+  else
     echo "Error: Chart.yaml not found in directory '$chart_path'"
     exit 1
   fi
-else
-  echo "Error: Specified chart_path '$chart_path' is not a directory"
+elif [[ ! -f "$chart_path" ]]; then
+  echo "Error: Specified chart_path '$chart_path' does not exist"
   exit 1
 fi
+
 
 
 if [[ -z $environment || $environment == "" ]]; then
