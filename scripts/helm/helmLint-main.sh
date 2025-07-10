@@ -107,11 +107,11 @@ if [[ -n "$chart_path" && -d "$chart_path" ]]; then
   if [[ -f "$chart_path/Chart.yaml" ]]; then
     chart_path="$chart_path/Chart.yaml"
   else
-    echo "❌ Error: Chart.yaml not found in directory '$chart_path'"
+    echo "Error: Chart.yaml not found in directory '$chart_path'"
     exit 1
   fi
 elif [[ ! -f "$chart_path" ]]; then
-  echo "❌ Error: Specified chart_path '$chart_path' does not exist as file"
+  echo "Error: Specified chart_path '$chart_path' does not exist as file"
   exit 1
 fi
 
