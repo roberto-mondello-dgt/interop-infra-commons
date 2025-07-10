@@ -102,7 +102,7 @@ do
 done
 echo "Arguments: $@"
 
-# Normalize chart_path to Chart.yaml if it's a directory
+# Check if chart_path is set and is a valid file or directory
 if [[ -n "$chart_path" && -d "$chart_path" ]]; then
   if [[ -f "$chart_path/Chart.yaml" ]]; then
     chart_path="$chart_path/Chart.yaml"
@@ -115,8 +115,6 @@ elif [[ ! -f "$chart_path" ]]; then
   echo "Error: Specified chart_path '$chart_path' does not exist"
   exit 1
 fi
-
-
 
 if [[ -z $environment || $environment == "" ]]; then
   echo "Environment cannot be null"
