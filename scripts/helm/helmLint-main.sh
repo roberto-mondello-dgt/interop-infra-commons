@@ -116,10 +116,10 @@ echo "Arguments: $@"
 #   exit 1
 # fi
 
-# Usa valore di default se non passato
+# Uses default Chart.yaml path if not specified
 chart_path="${chart_path:-$PROJECT_DIR/Chart.yaml}"
 
-# Se è una directory, prova a usare Chart.yaml al suo interno
+# If it's a directory, try to use Chart.yaml inside it
 if [[ -d "$chart_path" ]]; then
   if [[ -f "$chart_path/Chart.yaml" ]]; then
     chart_path="$chart_path/Chart.yaml"
@@ -132,7 +132,6 @@ elif [[ ! -f "$chart_path" ]]; then
   exit 1
 fi
 
-echo "Using Chart.yaml path: $chart_path"
 
 if [[ -z $environment || $environment == "" ]]; then
   echo "Environment cannot be null"

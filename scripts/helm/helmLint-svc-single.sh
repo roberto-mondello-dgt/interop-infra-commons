@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT_DIR=${PROJECT_DIR:-$(pwd)}
 ROOT_DIR=$PROJECT_DIR
-[[ -f "$ROOT_DIR/Chart.yaml" ]] || ROOT_DIR="$PROJECT_DIR/chart"
+#[[ -f "$ROOT_DIR/Chart.yaml" ]] || ROOT_DIR="$PROJECT_DIR/chart"
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPTS_FOLDER"/common-functions.sh
 
@@ -120,7 +120,7 @@ if [[ -z $VALID_CONFIG || $VALID_CONFIG == "" ]]; then
 fi
 
 ENV=$environment
-export ENV=$environment
+#export ENV=$environment
 MICROSERVICE_DIR=$( echo $microservice | sed  's/-/_/g' )
 OUT_DIR="$ROOT_DIR/out/lint/$ENV/microservice_$MICROSERVICE_DIR"
 if [[ $output_redirect != "console" ]]; then
