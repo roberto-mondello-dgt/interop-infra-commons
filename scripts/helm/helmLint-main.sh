@@ -116,19 +116,23 @@ echo "Arguments: $@"
 #   exit 1
 # fi
 
-# check if chart path is correct and Chart.yaml exists
-if [[ -z "$chart_path" ]]; then
-  echo "Error: chart_path is not set"
+# Usa valore di default se non passato
+chart_path="${chart_path:-$PROJECT_DIR/Chart.yaml}"
+
+# Se è una directory, prova a usare Chart.yaml al suo interno
+if [[ -d "$chart_path" ]]; then
+  if [[ -f "$chart_path/Chart.yaml" ]]; then
+    chart_path="$chart_path/Chart.yaml"
+  else
+    echo "Error: Chart.yaml not found in directory '$chart_path'"
+    exit 1
+  fi
+elif [[ ! -f "$chart_path" ]]; then
+  echo "Error: Specified chart_path '$chart_path' does not exist"
   exit 1
-elif [[ ! -d "$chart_path" ]]; then
-  echo "Error: '$chart_path' is not a directory or does not exist"
-  exit 1
-elif [[ ! -f "$chart_path/Chart.yaml" ]]; then
-  echo "Error: 'Chart.yaml' not found inside directory '$chart_path'"
-  exit 1
-else
-  echo "Using Helm chart directory: $chart_path"
 fi
+
+echo "Using Chart.yaml path: $chart_path"
 
 if [[ -z $environment || $environment == "" ]]; then
   echo "Environment cannot be null"
