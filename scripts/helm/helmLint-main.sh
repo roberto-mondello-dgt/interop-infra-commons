@@ -156,6 +156,7 @@ if [[ -n $images_file ]]; then
 fi
 
 if [[ $skip_dep == false ]]; then
+  echo "executing helm dependencies setup"
   bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path"
 fi
 
