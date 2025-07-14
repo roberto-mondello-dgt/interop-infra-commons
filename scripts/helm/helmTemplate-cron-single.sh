@@ -16,6 +16,7 @@ help()
         [ -c | --clean ] Clean files and directories after script successfull execution
         [ -v | --verbose ] Show debug messages
         [ -sd | --skip-dep ] Skip Helm dependencies setup
+        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
         [ -h | --help ] This help"
     exit 2
 }
@@ -29,6 +30,7 @@ output_redirect=""
 skip_dep=false
 verbose=false
 images_file=""
+chart_path=""
 
 step=1
 for (( i=0; i<$args; i+=$step ))
@@ -43,7 +45,7 @@ do
           ;;
         -j | --job )
           [[ "${2:-}" ]] || "Job cannot be null" || help
-          
+
           job=$2
           jobAllowedRes=$(isAllowedCronjob $job)
           if [[ -z $jobAllowedRes || $jobAllowedRes == "" ]]; then
@@ -57,7 +59,7 @@ do
           ;;
         -i | --image )
           images_file=$2
-          
+
           step=2
           shift 2
           ;;
@@ -91,6 +93,11 @@ do
           step=1
           shift 1
           ;;
+        -cp | --chart-path )
+          chart_path=$2
+          step=2
+          shift 2
+          ;;
         -h | --help )
           help
           ;;
@@ -111,7 +118,7 @@ if [[ -z $job || $job == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path
 fi
 
 VALID_CONFIG=$(isCronjobEnvConfigValid $job $environment)
@@ -151,6 +158,7 @@ fi
 
 #TEMPLATE_CMD=$TEMPLATE_CMD" $job interop-eks-cronjob-chart/interop-eks-cronjob-chart -f \"$ROOT_DIR/commons/$ENV/values-cronjob.compiled.yaml\" -f \"$ROOT_DIR/jobs/$job/$ENV/values.yaml\" $OUTPUT_TO"
 TEMPLATE_CMD=$TEMPLATE_CMD" $job "$ROOT_DIR/charts/interop-eks-cronjob-chart" -f \"$ROOT_DIR/commons/$ENV/values-cronjob.compiled.yaml\" -f \"$ROOT_DIR/jobs/$job/$ENV/values.yaml\" $OUTPUT_TO"
+
 
 eval $TEMPLATE_CMD
 if [[ $verbose == true ]]; then

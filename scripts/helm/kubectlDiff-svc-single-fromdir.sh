@@ -11,6 +11,7 @@ help()
     echo "Usage:  [ -e | --environment ] Cluster environment used to execute kubectl diff
         [ -m | --microservice ] Microservice defined in microservices folder
         [ -sd | --skip-dep ] Skip Helm dependencies setup
+        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
         [ -h | --help ] This help"
     exit 2
 }
@@ -20,6 +21,8 @@ environment=""
 microservice=""
 enable_debug=false
 post_clean=false
+skip_dep=false
+chart_path=""
 
 step=1
 for (( i=0; i<$args; i+=$step ))
@@ -71,7 +74,7 @@ if [[ -z $microservice || $microservice == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path"
   skip_dep=true
 fi
 
@@ -98,4 +101,3 @@ eval $DIFF_CMD
 #if [[ $post_clean == true ]]; then
 #  rm -rf $OUT_DIR
 #fi
-

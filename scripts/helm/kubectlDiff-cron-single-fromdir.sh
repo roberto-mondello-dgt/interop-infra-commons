@@ -11,6 +11,7 @@ help()
     echo "Usage:  [ -e | --environment ] Cluster environment used to execute kubectl diff
         [ -j | --job ] Cronjob defined in jobs folder
         [ -sd | --skip-dep ] Skip Helm dependencies setup
+        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
         [ -h | --help ] This help"
     exit 2
 }
@@ -21,6 +22,7 @@ job=""
 enable_debug=false
 post_clean=false
 skip_dep=false
+chart_path=""
 
 step=1
 for (( i=0; i<$args; i+=$step ))
@@ -35,7 +37,7 @@ do
           ;;
         -j | --job )
           [[ "${2:-}" ]] || "Job cannot be null" || help
-          
+
           job=$2
           jobAllowedRes=$(isAllowedCronjob $job)
           if [[ -z $jobAllowedRes || $jobAllowedRes == "" ]]; then
@@ -51,6 +53,11 @@ do
           skip_dep=true
           step=1
           shift 1
+          ;;
+        -cp | --chart-path )
+          chart_path=$2
+          step=2
+          shift 2
           ;;
         -h | --help )
           help
@@ -72,7 +79,7 @@ if [[ -z $job || $job == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash $(dirname "$0")/helmDep.sh
+  bash $(dirname "$0")/helmDep.sh --chart-path "$chart_path"
 fi
 
 VALID_CONFIG=$(isCronjobEnvConfigValid $job $environment)

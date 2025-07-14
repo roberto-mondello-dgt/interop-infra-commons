@@ -79,6 +79,8 @@ function setupHelmDeps()
     # Create charts directory and copy Chart.yaml into it
     cd "$ROOT_DIR"
 
+    rm -rf charts
+
     if [[ $verbose == true ]]; then
         echo "Creating directory charts"
     fi
