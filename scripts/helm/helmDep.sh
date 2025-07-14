@@ -53,21 +53,25 @@ do
     esac
 done
 
-# Uses default Chart.yaml path if not specified
-CHART_PATH="${CHART_PATH:-$PROJECT_DIR/Chart.yaml}"
 
+
+if [[ -z "$CHART_PATH" ]]; then
+    # Uses default Chart.yaml path if not specified
+    CHART_PATH="$PROJECT_DIR/Chart.yaml"
 # If it's a directory, try to use Chart.yaml inside it
-if [[ -d "$CHART_PATH" ]]; then
+elif [[ -d "$CHART_PATH" ]]; then
   if [[ -f "$CHART_PATH/Chart.yaml" ]]; then
     CHART_PATH="$CHART_PATH/Chart.yaml"
   else
     echo "Error: Chart.yaml not found in directory '$CHART_PATH'"
     exit 1
   fi
-elif [[ ! -f "$CHART_PATH" ]]; then
-  echo "Error: Specified chart_path '$CHART_PATH' does not exist"
-  exit 1
+else
+   echo "Error: Specified chart_path '$CHART_PATH' does not exist"
+   exit 1
 fi
+
+
 
 function setupHelmDeps()
 {
