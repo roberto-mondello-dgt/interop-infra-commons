@@ -2,14 +2,14 @@
 set -euo pipefail
 
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR=$PROJECT_DIR
+#ROOT_DIR=$PROJECT_DIR
 
 function isCronjobEnvConfigValid()
 {
     CRONJOB=$1
     ENVIRONMENT=$2
     CRONJOBS_DIR=$(getCronjobsDir)
-    
+
     if [[ ! -d "$CRONJOBS_DIR/$CRONJOB/$ENVIRONMENT" ]]; then
         echo ""
     else
@@ -45,7 +45,7 @@ function getAllowedMicroservices()
     local DELIMITER=";"
     local SERVICES_DIR=$(getMicroservicesDir)
     local ALLOWED_SERVICES=""
-    
+
     for dir in "$SERVICES_DIR"/*;
     do
         CURRENT_SVC=$(basename "$dir");
@@ -94,7 +94,7 @@ function isAllowedMicroservice()
     local DELIMITER=";"
     local SERVICE=$1
     local RESULT=$(isAllowedValue $ALLOWED_SERVICES $DELIMITER $SERVICE)
-    
+
     if [[ -z $RESULT || $RESULT == "" ]]; then
         echo ""
     else
@@ -108,7 +108,7 @@ function isAllowedCronjob()
     local DELIMITER=";"
     local CRONJOB=$1
     local RESULT=$(isAllowedValue $ALLOWED_CRONJOBS $DELIMITER $CRONJOB)
-    
+
     if [[ -z $RESULT || $RESULT == "" ]]; then
         echo ""
     else
@@ -120,7 +120,7 @@ function getAllowedMicroservices()
     local DELIMITER=";"
     local SERVICES_DIR=$(getMicroservicesDir)
     local ALLOWED_SERVICES=""
-    
+
     for dir in "$SERVICES_DIR"/*;
     do
         CURRENT_SVC=$(basename "$dir");
@@ -140,18 +140,18 @@ function getAllowedMicroservicesForEnvironment()
     if [[ -z $ENVIRONMENT || $ENVIRONMENT == "" ]]; then
         exit 1
     fi
-    
+
     local MICROSERVICES_DIR=$(getMicroservicesDir)
     if [[ ! -d "$MICROSERVICES_DIR" ]]; then
         exit 1
     fi
 
     local ALLOWED_SERVICES=""
-    
+
     for dir in "$MICROSERVICES_DIR"/*;
     do
         CURRENT_SVC=$(basename "$dir");
-        
+
         if [[ -d "$dir/$ENVIRONMENT" ]]; then
             if [[ $ALLOWED_SERVICES == "" ]]; then
                 ALLOWED_SERVICES=$CURRENT_SVC
@@ -160,7 +160,7 @@ function getAllowedMicroservicesForEnvironment()
             fi
         fi
     done
-    
+
     echo $ALLOWED_SERVICES
 }
 
@@ -178,7 +178,7 @@ function getAllowedCronjobsForEnvironment()
     fi
 
     local ALLOWED_CRONJOBS=""
-        
+
     for dir in "$CRONJOBS_DIR"/*;
     do
         CURRENT_JOB=$(basename "$dir");
@@ -190,7 +190,6 @@ function getAllowedCronjobsForEnvironment()
             fi
         fi
     done
-    
+
     echo $ALLOWED_CRONJOBS
 }
-      

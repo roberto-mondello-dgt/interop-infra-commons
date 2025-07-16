@@ -18,7 +18,7 @@ help()
         [ -c | --clean ] Clean files and directories after script successfull execution
         [ -v | --verbose ] Show debug messages
         [ -sd | --skip-dep ] Skip Helm dependencies setup
-        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
+        [ -cp | --chart-path ] Path to Chart.yaml file (overrides environment selection; must be an existing file)
         [ -dtl | --disable-templating-lookup ] Disable Helm --dry-run=server option in order to avoid lookup configmaps and secrets when templating
         [ -h | --help ] This help"
     exit 2
@@ -93,6 +93,7 @@ do
           shift 1
           ;;
         -cp | --chart-path )
+          [[ "${2:-}" ]] || { echo "Error: The chart path (-cp/--chart-path) cannot be null or empty."; help; }
           chart_path=$2
           step=2
           shift 2
@@ -127,7 +128,7 @@ if [[ -z $microservice || $microservice == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path"
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path" --environment "$environment"
 fi
 
 VALID_CONFIG=$(isMicroserviceEnvConfigValid $microservice $environment)

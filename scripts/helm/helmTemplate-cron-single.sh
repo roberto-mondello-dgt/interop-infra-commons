@@ -16,7 +16,7 @@ help()
         [ -c | --clean ] Clean files and directories after script successfull execution
         [ -v | --verbose ] Show debug messages
         [ -sd | --skip-dep ] Skip Helm dependencies setup
-        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
+        [ -cp | --chart-path ] Path to Chart.yaml file (overrides environment selection; must be an existing file)
         [ -h | --help ] This help"
     exit 2
 }
@@ -94,6 +94,7 @@ do
           shift 1
           ;;
         -cp | --chart-path )
+          [[ "${2:-}" ]] || { echo "Error: The chart path (-cp/--chart-path) cannot be null or empty."; help; }
           chart_path=$2
           step=2
           shift 2
@@ -109,6 +110,8 @@ do
     esac
 done
 
+ENV=$environment
+
 if [[ -z $environment || $environment == "" ]]; then
   echo "Environment cannot be null"
   help
@@ -117,8 +120,9 @@ if [[ -z $job || $job == "" ]]; then
   echo "Job cannot null"
   help
 fi
+
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path"
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path" --environment "$ENV"
 fi
 
 VALID_CONFIG=$(isCronjobEnvConfigValid $job $environment)
@@ -127,7 +131,6 @@ if [[ -z $VALID_CONFIG || $VALID_CONFIG == "" ]]; then
   help
 fi
 
-ENV=$environment
 JOB_DIR=$( echo $job | sed  's/-/_/g' )
 OUT_DIR="$ROOT_DIR/out/templates/$ENV/job_$JOB_DIR"
 if [[ $output_redirect != "console" ]]; then

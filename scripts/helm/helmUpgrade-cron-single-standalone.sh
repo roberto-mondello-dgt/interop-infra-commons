@@ -18,7 +18,7 @@ help()
         [ -sd | --skip-dep ] Skip Helm dependencies setup
         [ -hm | --history-max ] Set the maximum number of revisions saved per release
         [ --force ] Force helm upgrade
-        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
+        [ -cp | --chart-path ] Path to Chart.yaml file (overrides environment selection; must be an existing file)
         [ -h | --help ] This help"
     exit 2
 }
@@ -115,6 +115,7 @@ do
           shift 1
           ;;
         -cp | --chart-path )
+          [[ "${2:-}" ]] || { echo "Error: The chart path (-cp/--chart-path) cannot be null or empty."; help; }
           chart_path=$2
           step=2
           shift 2
@@ -139,7 +140,7 @@ if [[ -z $job || $job == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path"
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path" --environment "$environment"
   skip_dep=true
 fi
 

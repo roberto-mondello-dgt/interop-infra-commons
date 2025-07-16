@@ -17,7 +17,7 @@ help()
         [ -i | --image ] File with microservices and cronjobs images tag and digest
         [ -dtl | --disable-templating-lookup ] Disable Helm --dry-run=server option in order to avoid lookup configmaps and secrets when templating
         [ -sd | --skip-dep ] Skip Helm dependencies setup
-        [ -cp | --chart-path ] Path to Chart.yaml (default: ./Chart.yaml)
+        [ -cp | --chart-path ] Path to Chart.yaml file (overrides environment selection; must be an existing file)
         [ -h | --help ] This help"
     exit 2
 }
@@ -76,6 +76,7 @@ do
           shift 1
           ;;
         -cp | --chart-path )
+          [[ "${2:-}" ]] || { echo "Error: The chart path (-cp/--chart-path) cannot be null or empty."; help; }
           chart_path=$2
           step=2
           shift 2
@@ -115,7 +116,7 @@ if [[ -n $chart_path ]]; then
   OPTIONS=$OPTIONS" -cp $chart_path"
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path"
+  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path" --environment "$environment"
   skip_dep=true
 fi
 
