@@ -130,6 +130,7 @@ jobs:
             for MICROSERVICE_NAME in $MICROSERVICES; do
               echo "=== Processing microservice: $MICROSERVICE_NAME ==="
               TEMPLATE_OUTPUT_PATH="$(pwd)/helm-template-${MICROSERVICE_NAME}.yaml"
+              echo "Using template output path: $TEMPLATE_OUTPUT_PATH"
 
               echo "Templating microservice: $MICROSERVICE_NAME"
               $SCRIPTS_FOLDER/helmTemplate-svc-single.sh \
@@ -139,6 +140,7 @@ jobs:
                 -i $PROJECT_DIR/commons/${{ inputs.environment }}/images.yaml \
                 #--output console > $TEMPLATE_OUTPUT_PATH
                 --output "$TEMPLATE_OUTPUT_PATH"
+                echo "Executing command: $SCRIPTS_FOLDER/helmTemplate-svc-single.sh --debug --environment ${{ inputs.environment }} --microservice $MICROSERVICE_NAME -i $PROJECT_DIR/commons/${{ inputs.environment }}/images.yaml --output $TEMPLATE_OUTPUT_PATH"
 
               if [[ $? -ne 0 ]]; then
                 echo "Template generation failed for microservice: $MICROSERVICE_NAME"
