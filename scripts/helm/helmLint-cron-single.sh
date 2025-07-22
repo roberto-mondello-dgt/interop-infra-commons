@@ -120,7 +120,6 @@ if [[ -z $VALID_CONFIG || $VALID_CONFIG == "" ]]; then
 fi
 
 ENV=$environment
-export ENV=$environment
 JOB_DIR=$( echo $job | sed  's/-/_/g' )
 OUT_DIR="$ROOT_DIR/out/lint/$ENV/job_$JOB_DIR"
 if [[ $output_redirect != "console" ]]; then
@@ -147,11 +146,12 @@ OUTPUT_TO="> \"$OUT_DIR/$job.out.yaml\""
 if [[ $output_redirect == "console" ]]; then
   OUTPUT_TO=""
 fi
+#LINT_CMD=$LINT_CMD" \"$ROOT_DIR/charts/interop-eks-cronjob-chart\" -f \"$ROOT_DIR/charts/interop-eks-cronjob-chart/values.yaml\" -f \"$ROOT_DIR/commons/$ENV/values-cronjob.compiled.yaml\" -f \"$ROOT_DIR/jobs/$job/$ENV/values.yaml\" $OUTPUT_TO"
 
 LINT_CMD+=" \"$ROOT_DIR/charts/interop-eks-cronjob-chart\""
+LINT_CMD+=" -f \"$ROOT_DIR/charts/interop-eks-cronjob-chart/values.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/commons/$ENV/values-cronjob.compiled.yaml\""
 LINT_CMD+=" -f \"$ROOT_DIR/jobs/$job/$ENV/values.yaml\""
-LINT_CMD+=" --set enableLookup=false"
 LINT_CMD+=" $OUTPUT_TO"
 
 eval $LINT_CMD

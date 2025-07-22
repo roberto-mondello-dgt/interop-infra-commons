@@ -15,7 +15,7 @@ help()
         [ -m | --microservices ] Generate templates for all microserviceservices
         [ -j | --jobs ] Generate templates for all cronjobs
         [ -i | --image ] File with microservices and cronjobs images tag and digest
-        [ -o | --output ] Default output to predefined dir. Otherwise set to "console" to print template output on terminal
+        [ -o | --output ] Default output to predefined dir. Otherwise set to "console" to print template output on terminal or set to a file path to redirect output
         [ -c | --clean ] Clean files and directories after scripts successfull execution
         [ -sd | --skip-dep ] Skip Helm dependencies setup
         [ -cp | --chart-path ] Path to Chart.yaml file (overrides environment selection; must be an existing file)
@@ -41,8 +41,7 @@ for (( i=0; i<$args; i+=$step ))
 do
     case "$1" in
         -e| --environment )
-            [[ "${2:-}" ]] || "Environment cannot be null" || help
-
+          [[ "${2:-}" ]] || "Environment cannot be null" || help
           environment=$2
           step=2
           shift 2
@@ -59,7 +58,6 @@ do
           ;;
         -i | --image )
           images_file=$2
-
           step=2
           shift 2
           ;;
@@ -71,10 +69,9 @@ do
         -o | --output)
           [[ "${2:-}" ]] || "When specified, output cannot be null" || help
           output_redirect=$2
-          if [[ $output_redirect != "console" ]]; then
+          if [[ $output_redirect != "console" ]] && [[ -z "$output_redirect" ]]; then
             help
           fi
-
           step=2
           shift 2
           ;;
@@ -139,7 +136,15 @@ if [[ -n $chart_path ]]; then
 fi
 
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path" --environment "$ENV"
+  HELMDEP_OPTIONS="--untar"
+
+  if [[ -n "$chart_path" ]]; then
+    HELMDEP_OPTIONS="$HELMDEP_OPTIONS --chart-path "$chart_path""
+  fi
+
+  HELMDEP_OPTIONS="$HELMDEP_OPTIONS --environment "$environment""
+
+  bash "$SCRIPTS_FOLDER"/helmDep.sh $HELMDEP_OPTIONS
 fi
 
 MICROSERVICE_OPTIONS=" "

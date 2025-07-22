@@ -6,15 +6,13 @@ ROOT_DIR=$PROJECT_DIR
 SCRIPTS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPTS_FOLDER"/common-functions.sh
 
-echo ">>> helmTemplate-svc-single.sh CALLED with args: $@"
-
 help()
 {
     echo "Usage:  [ -e | --environment ] Cluster environment used for template generation
         [ -d | --debug ] Enable Helm template debug
         [ -m | --microservice ] Microservice defined in microservices folder
         [ -i | --image ] File with microservice image tag and digest
-        [ -o | --output ] Default output to predefined dir. Otherwise set to "console" to print template output on terminal
+        [ -o | --output ] Default output to predefined dir. Otherwise set to "console" to print template output on terminal or set to a file path to redirect output
         [ -c | --clean ] Clean files and directories after script successfull execution
         [ -v | --verbose ] Show debug messages
         [ -sd | --skip-dep ] Skip Helm dependencies setup
@@ -41,15 +39,13 @@ for (( i=0; i<$args; i+=$step ))
 do
     case "$1" in
         -e| --environment )
-            [[ "${2:-}" ]] || "Environment cannot be null" || help
-
+          [[ "${2:-}" ]] || "Environment cannot be null" || help
           environment=$2
           step=2
           shift 2
           ;;
         -m | --microservice )
           [[ "${2:-}" ]] || "Microservice cannot be null" || help
-
           microservice=$2
           serviceAllowedRes=$(isAllowedMicroservice $microservice)
           if [[ -z $serviceAllowedRes || $serviceAllowedRes == "" ]]; then
@@ -57,13 +53,11 @@ do
             echo "Allowed values: " $(getAllowedMicroservices)
             help
           fi
-
           step=2
           shift 2
           ;;
         -i | --image )
           images_file=$2
-
           step=2
           shift 2
           ;;
@@ -75,10 +69,9 @@ do
         -o | --output)
           [[ "${2:-}" ]] || "When specified, output cannot be null" || help
           output_redirect=$2
-          if [[ $output_redirect != "console" ]]; then
+          if [[ $output_redirect != "console" ]] && [[ -z "$output_redirect" ]]; then
             help
           fi
-
           step=2
           shift 2
           ;;
@@ -114,7 +107,6 @@ do
         *)
           echo "Unexpected option: $1"
           help
-
           ;;
     esac
 done
@@ -128,7 +120,15 @@ if [[ -z $microservice || $microservice == "" ]]; then
   help
 fi
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --verbose --chart-path "$chart_path" --environment "$environment"
+  HELMDEP_OPTIONS="--untar"
+
+  if [[ -n "$chart_path" ]]; then
+    HELMDEP_OPTIONS="$HELMDEP_OPTIONS --chart-path "$chart_path""
+  fi
+
+  HELMDEP_OPTIONS="$HELMDEP_OPTIONS --environment "$environment""
+
+  bash "$SCRIPTS_FOLDER"/helmDep.sh $HELMDEP_OPTIONS
 fi
 
 VALID_CONFIG=$(isMicroserviceEnvConfigValid $microservice $environment)
@@ -141,7 +141,7 @@ ENV=$environment
 MICROSERVICE_DIR=$( echo $microservice | sed  's/-/_/g' )
 
 OUT_DIR="$ROOT_DIR/out/templates/$ENV/microservice_$MICROSERVICE_DIR"
-if [[ $output_redirect != "console" ]]; then
+if [[ "$output_redirect" != "console" ]] && [[ -z "$output_redirect" ]]; then
   rm -rf "$OUT_DIR"
   mkdir  -p "$OUT_DIR"
 else
@@ -171,6 +171,8 @@ OUTPUT_FILE="\"$OUT_DIR/$microservice.out.yaml\""
 OUTPUT_TO="> $OUTPUT_FILE"
 if [[ $output_redirect == "console" ]]; then
   OUTPUT_TO=""
+elif [[ -n "$output_redirect" ]]; then
+  OUTPUT_TO="> \"$output_redirect\""
 fi
 
 #TEMPLATE_CMD=$TEMPLATE_CMD" $microservice interop-eks-microservice-chart/interop-eks-microservice-chart -f \"$ROOT_DIR/commons/$ENV/values-microservice.compiled.yaml\" -f \"$ROOT_DIR/microservices/$microservice/$ENV/values.yaml\" $OUTPUT_TO"
@@ -181,6 +183,6 @@ if [[ $verbose == true ]]; then
   echo "Successfully created Helm Template for microservice $microservice at $OUTPUT_FILE"
 fi
 
-if [[ $output_redirect != "console" && $post_clean == true ]]; then
+if [[ $output_redirect != "console" ]] && [[ -z "$output_redirect" ]] && [[ $post_clean == true ]]; then
   rm -rf $OUT_DIR
 fi
