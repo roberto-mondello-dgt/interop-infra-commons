@@ -115,9 +115,14 @@ fi
 if [[ -n $chart_path ]]; then
   OPTIONS=$OPTIONS" -cp $chart_path"
 fi
+
 if [[ $skip_dep == false ]]; then
-  bash "$SCRIPTS_FOLDER"/helmDep.sh --untar --chart-path "$chart_path" --environment "$environment"
-  skip_dep=true
+  HELMDEP_OPTIONS="--untar"
+  if [[ -n "$chart_path" ]]; then
+    HELMDEP_OPTIONS+="$HELMDEP_OPTIONS --chart-path \"$chart_path\""
+  fi
+  HELMDEP_OPTIONS+="$HELMDEP_OPTIONS --environment \"$ENV\""
+  eval bash "$SCRIPTS_FOLDER"/helmDep.sh $HELMDEP_OPTIONS
 fi
 
 # Skip further execution of helm deps build and update since we have already done it in the previous line
